@@ -16,9 +16,12 @@
 
 ## Ideas
 
+- [x] angle change between detectors. Good
+- [x] pca fitted on 1st detector, applied to the all detector MatchedHits. Mediocre or bad
 - [ ] read in parallel
-- [x] normalize classes
+- [x] normalize classes. Mediocre
 - [ ] ensembles
+- [x] IsMuon. Data already filtered by it, so it adds no info
 
 ## Experiments
 
