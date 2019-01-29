@@ -21,7 +21,9 @@ def find_threshold_for_efficiency(a, e, w):
     if last_unsuitable_inv == 0:
         raise ValueError("Bug in code")
     last_unsuitable_plus = len(a) - last_unsuitable_inv
-    return 0.5*(a_sort[first_suitable] + a_sort[last_unsuitable_plus])
+    l = a_sort[last_unsuitable_plus]
+    r = a_sort[first_suitable]
+    return 0.5*(l + r), l, r, enough_passing
 
 
 def get_rejection_at_efficiency_raw(
@@ -32,7 +34,7 @@ def get_rejection_at_efficiency_raw(
         signal_weights = None
     else:
         signal_weights = weights[signal_mask]
-    threshold = find_threshold_for_efficiency(predictions[signal_mask], 
+    threshold, *_ = find_threshold_for_efficiency(predictions[signal_mask],
                                               quantile, signal_weights)
     rejected_indices = (predictions[background_mask] < threshold)
     if weights is not None:
@@ -52,6 +54,18 @@ def get_rejection_at_efficiency(labels, predictions, threshold, sample_weight=No
 
 def rejection90(labels, predictions, sample_weight=None):
     return get_rejection_at_efficiency(labels, predictions, 0.9, sample_weight=sample_weight)
+
+
+def get_threshold_details(labels, predictions, sample_weight, quantile=0.9):
+    signal_mask = (labels >= 1)
+    if sample_weight is None:
+        signal_weights = None
+    else:
+        signal_weights = sample_weight[signal_mask]
+    _, l, r, ep = find_threshold_for_efficiency(predictions[signal_mask],
+                                                  quantile, signal_weights)
+
+    return l, r, ep
 
 
 rejection90_sklearn = make_scorer(
