@@ -4,4 +4,4 @@ catboost_info
 *.cbm
 *.xgb
 *.csv
-data
+*.gz
