@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <cassert>
 #include <sstream>
 
 #include "parser.h"
@@ -198,8 +200,8 @@ void Parser::read_one(size_t& id, std::vector<float>& result)
     buffered_stream.fill_iterator_float(
             &data[0] + N_FEATURES - N_RAW_FEATURES_TAIL, N_RAW_FEATURES_TAIL);
 
-    size_t i = 0;
-    for (auto it = index.perm_begin(); it != index.perm_end(); ++it, ++i) {
-        result[i] = data[*it];
+    result.reserve(index.size());
+    for (auto it = index.perm_begin(); it != index.perm_end(); ++it) {
+        result.push_back(data[*it]);
     }
 }
