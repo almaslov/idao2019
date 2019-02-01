@@ -19,27 +19,27 @@ def sample(data, nrows):
 
 
 def fit(train, n_estimators, transformer_cls):
-    target_train = train[train_cols]
-    
+    labels, weights = get_labels_weights(train.loc[:, train_cols])
+
     # defined much later
     transformer = transformer_cls().fit(train)
-    train = transformer.transform(train)
+    train_values = transformer.transform(train)
     
     estimator = xgb.XGBClassifier(n_estimators=n_estimators, n_jobs=3)
-    estimator.fit(train.values, target_train.label.values, sample_weight=target_train.weight.values, eval_metric=scoring.rejection90_sklearn)
+    estimator.fit(train_values, labels, sample_weight=weights, eval_metric=scoring.rejection90_sklearn)
     return transformer, estimator
     
 def predict(fitted_state, test):
     transformer, estimator = fitted_state
-    
-    test = transformer.transform(test)
-    predictions = estimator.predict_proba(test.values)[:, 1]
+
+    test_value = transformer.transform(test)
+    predictions = estimator.predict_proba(test_value)[:, 1]
     return predictions
 
 def score(fitted_state, test):
-    target_test = test.loc[:, train_cols]
+    labels, weights = get_labels_weights(test.loc[:, train_cols])
     predictions = predict(fitted_state, test)
-    return scoring.rejection90(target_test.label.values, predictions, sample_weight=target_test.weight.values)
+    return scoring.rejection90(labels, predictions, sample_weight=weights)
 
 def fit_predict_save(train, test, filename, n_estimators, transformer_cls):
     fitted_state = fit(train, n_estimators, transformer_cls)
@@ -48,13 +48,11 @@ def fit_predict_save(train, test, filename, n_estimators, transformer_cls):
     pd.DataFrame(data={"prediction": predictions}, index=test.index).to_csv(
         filename, index_label='id'
     )
-    
-    model = fitted_state[1]
-    model.save_model(to_model_filename(filename))
+    save_model(fitted_state[1], fitted_state[0], filename)
 
 def fit_save_model(train, filename, n_estimators, transformer_cls):
-    _, model = fit(train, n_estimators, transformer_cls)
-    model.save_model(to_model_filename(filename))
+    transformer, model = fit(train, n_estimators, transformer_cls)
+    save_model(model, transformer, filename)
 
 def cross_validate(train, n_estimators, n_splits, n_rows, transformer_cls):
     train = sample(train, n_rows)
@@ -67,11 +65,11 @@ def cross_validate(train, n_estimators, n_splits, n_rows, transformer_cls):
         
         fit_state = fit(train_subset, n_estimators, transformer_cls)
         
-        target_test = test_subset[train_cols]
+        labels, weights = get_labels_weights(test_subset[train_cols])
         predictions = predict(fit_state, test_subset)
         
-        y_true = target_test.label.values
-        l, r, _ = scoring.get_threshold_details(y_true, predictions, sample_weight=target_test.weight.values)
+        y_true = labels
+        l, r, _ = scoring.get_threshold_details(y_true, predictions, sample_weight=weights)
         threshold = (l + r) / 2
         y_pred = predictions >= threshold
                 
@@ -80,14 +78,26 @@ def cross_validate(train, n_estimators, n_splits, n_rows, transformer_cls):
         rec = recall_score(y_true, y_pred)
         f1 = f1_score(y_true, y_pred)
         roc_auc = roc_auc_score(y_true, predictions)
-        scr = scoring.rejection90(y_true, predictions, sample_weight=target_test.weight.values)
+        scr = scoring.rejection90(y_true, predictions, sample_weight=weights)
         scores += [[acc, prec, rec, f1, roc_auc, scr, threshold, r - l]]
 
     return pd.DataFrame(scores, columns=['acc', 'prec', 'rec', 'f1', 'roc_auc', 'scr', 'th', 'dTh'])
 
+def get_labels_weights(data):
+    return data.label.values, data.weight.values
+
+def save_model(model, transformer, filename):
+    model.save_model(to_model_filename(filename))
+    with open(to_cols_filename(filename), 'w') as txt_file:
+        str_arr = map(str, [transformer.origin_features, transformer.features])
+        to_write = '\n\n'.join(str_arr)
+        txt_file.write(to_write)
+
 def to_model_filename(filename):
-    if filename.endswith('.'):
-        return filename.replace('out/', 'models/').replace('.csv', '.xgb')
+    return filename.replace('out/', 'models/').replace('.csv', '.xgb')
+
+def to_cols_filename(filename):
+    return filename.replace('out/', 'models/').replace('.csv', '.txt').replace('.xgb', '.txt')
 
 # =================== NOT WORKING =======================
 
