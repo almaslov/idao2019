@@ -59,6 +59,9 @@ int main() {
         assert(out_len == 1);
 
         std::cout << id << DELIMITER << out_result[0] << '\n';
+
+        XGDMatrixFree(matrix);
     }
+    XGBoosterFree(booster);
     return 0;
 }

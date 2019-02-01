@@ -1,9 +1,9 @@
 CXXFLAGS = -std=c++17 -Wall -Werror
-XGB_PATH := $(shell python3 -c 'import xgboost; print(xgboost.__path__[0])')
+XGB_PATH := $(shell bash get_xgboost_path.sh)
 
 
 ifeq ($(DEBUG), 1)
-	CXXFLAGS += -g -O0 -p
+	CXXFLAGS += -g -O0 -p -fsanitize=address
 else
 	CXXFLAGS += -O3
 endif
@@ -25,4 +25,4 @@ baseline: parser.cpp parser.h main.cpp solution.h index.h feature.h
 	-o baseline
 
 clean:
-	rm -f baseline compute_features
+	rm -f baseline
