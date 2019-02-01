@@ -49,8 +49,7 @@ class CsvDataReader:
         for filename in filenames:
             data_generator = pd.read_csv(
                 filename, usecols=usecols, chunksize=chunk_size, #nrows=400000,
-                na_values=self.na_values, na_filter=False, 
-                converters=self._get_converters(), dtype=self._get_types()
+                na_values=self.na_values, converters=self._get_converters(), dtype=self._get_types()
             )
             for data in data_generator:
                 yield data
