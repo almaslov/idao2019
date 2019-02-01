@@ -15,7 +15,7 @@ build: baseline
 run: baseline
 	./baseline
 
-baseline: parser.cpp parser.h main.cpp lib
+baseline: parser.cpp parser.h main.cpp solution.h index.h feature.h
 	$(CXX) $(CXXFLAGS) \
 	-I$(XGB_PATH)/include \
 	-I$(XGB_PATH)/rabit/include \

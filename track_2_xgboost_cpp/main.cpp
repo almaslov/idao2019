@@ -11,6 +11,7 @@
 
 #include "parser.h"
 #include "solution.h"
+#include "feature.h"
 
 
 int main() {
@@ -30,12 +31,20 @@ int main() {
     if (XGBoosterLoadModel(booster, xgb_model_path) < 0) {
         throw std::runtime_error("XGBoosterLoadModel");
     }
+    if (XGBoosterSetParam(booster, "nthread", "1") < 0) {
+        throw std::runtime_error("XGBoosterSetParam");
+    }
 
     std::cout << "id,prediction\n";
+    std::vector<float> all_features(N_FEATURES);
     while (std::cin.good() && std::cin.peek() != EOF) {
-        std::vector<float> features;
         size_t id;
-        parser.read_one(id, features);
+        parser.read_one(id, all_features);
+
+        std::vector<float> features;
+        index.select(all_features, &features);
+
+        add_features(features, calculated_features);
 
         DMatrixHandle matrix;
         if (XGDMatrixCreateFromMat(features.data(), 1, features.size(), NAN, &matrix) < 0) {
