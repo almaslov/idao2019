@@ -300,8 +300,8 @@ def convert_pvt_test():
 def read_train(cols, rows):
     return DatasetReader.read_dataset(meta_train, cols + train_cols, rows)
 
-def read_pub_test(cols, rows):
-    return DatasetReader.read_dataset(meta_pub_test, cols, rows)
+def read_pub_test(cols):
+    return DatasetReader.read_dataset(meta_pub_test, cols)
 
-def read_pvt_test(cols, rows):
-    return DatasetReader.read_dataset(meta_pvt_test, cols, rows)
+def read_pvt_test(cols):
+    return DatasetReader.read_dataset(meta_pvt_test, cols)
