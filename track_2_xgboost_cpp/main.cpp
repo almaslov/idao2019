@@ -53,7 +53,7 @@ int main() {
         bst_ulong out_len;
         const float *out_result;
 
-        if (XGBoosterPredict(booster, matrix, 1, 0, &out_len, &out_result) < 0) {
+        if (XGBoosterPredict(booster, matrix, 0, 0, &out_len, &out_result) < 0) {
             throw std::runtime_error("XGBoosterPredict");
         }
         assert(out_len == 1);
