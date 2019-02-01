@@ -2,10 +2,6 @@
 
 #include "index.h"
 
-template<class... Args>
-void _empty(Args&&... args)
-{
-}
 
 template<typename Func, std::size_t... I>
 auto make_feature_impl(Func f, Index index, std::index_sequence<I...>) {
@@ -22,7 +18,8 @@ auto make_feature(Func f, Args... args) {
 
 template<class... Args, std::size_t... I>
 void add_features_impl(std::vector<float>& v, std::tuple<Args...> f, std::index_sequence<I...>) {
-    (v.push_back(std::get<I>(f)(v)) , ...);
+    std::initializer_list<float> l {std::get<I>(f)(v) ...};
+    v.insert(v.end(), l.begin(), l.end());
 }
 
 template<class... Args>
