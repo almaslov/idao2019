@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from common import (
     SIMPLE_FEATURE_COLS, ARR_FEATURE_COLS, ALL_TRAIN_COLS,
+    xyz_cols, dxyz_cols, t_cols,
     foi_ts_cols, unused_train_cols, train_cols, hit_stats_cols, ncl_cols, hit_type_cols
 )
 
@@ -49,10 +50,17 @@ class CsvDataReader:
         for filename in filenames:
             data_generator = pd.read_csv(
                 filename, usecols=usecols, chunksize=chunk_size, #nrows=400000,
-                na_values=self.na_values, converters=self._get_converters(), dtype=self._get_types()
+                na_values=self._get_na_values_dict(), keep_default_na=False,
+                converters=self._get_converters(), dtype=self._get_types()
             )
             for data in data_generator:
+                
                 yield data
+
+    def _get_na_values_dict(self):
+        float_cols = [(col, '-9999.0') for col in xyz_cols + dxyz_cols]
+        int_cols = [(col, '255') for col in t_cols]
+        return {k:v for k, v in float_cols+int_cols}
 
     def _get_converters(self):
         def parse_float_array(line):
