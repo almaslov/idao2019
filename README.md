@@ -66,6 +66,15 @@ Good ones:
 
 - xyz_cols + mom_cols + hit_type_cols; coses, mse, normed_err
 
+### Cleaning by DAngle
+
+df_scores = cross_validate(train, n_estimators=60, n_splits=3, n_rows=100000, transformer_cls=DataTransformer)
+
+| what  | mean     | std      |
+| ----- | -------- | -------- |
+| 0=xyz | 0.451799 | 0.054607 |
+| + cos | 0.588528 | 0.015640 |
+
 ## Submissions
 
 | descr                                           | id       | score   |

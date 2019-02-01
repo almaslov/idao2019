@@ -23,7 +23,26 @@ def add_coses(data, features):
     
     for i in range(3):
         cosines = get_cosine_dist(layers[i], layers[i+1], norms[i], norms[i+1])
+        mask = ~np.isnan(cosines)
+        cosines[mask] = filter_angles(cosines[mask], data.label.values[mask])
         data[da_cols[i]] = cosines
         
     features += da_cols
     return data
+
+def filter_angles(x, labels):
+    quantile = np.quantile(x, .08)
+    
+    print(to_degrees(quantile), labels[x <= quantile].sum(), (x < quantile).sum(), labels[x > quantile].sum(), (x > quantile).sum())
+    
+    x[x <= quantile] = -1.
+    return x
+
+def to_degrees(cosine):
+    return np.arccos(cosine) / np.pi * 180.
+
+def _to_degrees(cosines):
+    angles = cosines.copy()
+    isn_mask = ~np.isnan(cosines)
+    angles[isn_mask] = np.arccos(cosines[isn_mask]) / np.pi * 180.
+    return angles
