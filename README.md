@@ -96,6 +96,10 @@ df_scores = cross_validate(train, n_estimators=60, n_splits=3, n_rows=100000, tr
 | normed d2                                       | 19087940 | 7106.62 |
 | custom pads d2                                  | 19088889 | 6842.78 |
 | x_dx_ex_edx_mom_hit_phit_da_mse_nerr_orig_1000k | 19090913 | 7195.64 |
-| x_dx_ex_edx_mom_hit_phit_da_mse_nerr_30_1300k   | 19090913 | 7161.54 |
-| x_dx_ex_edx_mom_hit_phit_da_mse_nerr_50_1700k   | 19090913 | 7205.29 |
+| x_dx_ex_edx_mom_hit_phit_da_mse_nerr_30_1300k   | 19090918 | 7161.54 |
+| x_dx_ex_edx_mom_hit_phit_da_mse_nerr_50_1700k   | 19090928 | 7205.29 |
 | 07_full_0_label_1000k                           | 19108324 | 7234.54 |
+| 08_all_nan_mean_400                             | 19177390 | 7187.28 |
+| 09_cos_EAngle_100                               | 19178103 | 7145.69 |
+| 09_cos_fix_NaN_100                              | 19178500 | 7137.69 |
+| 09_cos_fix_NaN_100_60                           | 19178558 | 7062.98 |

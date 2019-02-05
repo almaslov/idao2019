@@ -59,6 +59,7 @@ def cross_validate(train, n_estimators, n_splits, n_rows, transformer_cls):
     
     splitter = mdsel.StratifiedKFold(n_splits=n_splits, shuffle=True)
     scores = []
+    feature_importance = None
     for train_indices, test_indices in splitter.split(train, train.label):
         train_subset = train.iloc[train_indices, :]
         test_subset = train.iloc[test_indices, :]
@@ -80,8 +81,10 @@ def cross_validate(train, n_estimators, n_splits, n_rows, transformer_cls):
         roc_auc = roc_auc_score(y_true, predictions)
         scr = scoring.rejection90(y_true, predictions, sample_weight=weights)
         scores += [[acc, prec, rec, f1, roc_auc, scr, threshold, r - l]]
-
-    return pd.DataFrame(scores, columns=['acc', 'prec', 'rec', 'f1', 'roc_auc', 'scr', 'th', 'dTh'])
+        feature_importance = get_xgb_imp(fit_state[1], fit_state[0].origin_features + fit_state[0].features)
+        
+    descr = pd.DataFrame(scores, columns=['acc', 'prec', 'rec', 'f1', 'roc_auc', 'scr', 'th', 'dTh'])
+    return descr, feature_importance
 
 def get_labels_weights(data):
     return data.label.values, data.weight.values
@@ -98,6 +101,14 @@ def to_model_filename(filename):
 
 def to_cols_filename(filename):
     return filename.replace('out/', 'models/').replace('.csv', '.txt').replace('.xgb', '.txt')
+
+def get_xgb_imp(model, feat_names):
+    imp_vals = model.get_booster().get_fscore()
+    scores = np.array([float(imp_vals.get('f'+str(i),0.)) for i in range(len(feat_names))])
+    scores /= scores.sum()
+    
+    score = pd.DataFrame(data=scores, index=feat_names, columns=['score'])
+    return score.sort_values(by='score', ascending=False)
 
 # =================== NOT WORKING =======================
 
