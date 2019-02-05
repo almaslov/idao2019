@@ -39,12 +39,12 @@ Feature _make_feature(Func f, const std::string& name, Args... args) {
 #define make_feature(f, ...) _make_feature(f, #f, __VA_ARGS__)
 
 template<class... Args, std::size_t... I>
-void add_features_impl(std::vector<float>& v, std::tuple<Args...> f, std::index_sequence<I...>) {
-    std::initializer_list<float> l {std::get<I>(f)(v) ...};
+void add_features_impl(std::vector<float>& v, std::vector<float>& params, std::tuple<Args...> f, std::index_sequence<I...>) {
+    std::initializer_list<float> l {std::get<I>(f)(params) ...};
     v.insert(v.end(), l.begin(), l.end());
 }
 
 template<class... Args>
-void add_features(std::vector<float>& v, std::tuple<Args...> f) {
-    add_features_impl(v, f, std::make_index_sequence<sizeof...(Args)>());
+void add_features(std::vector<float>& v, std::vector<float>& params, std::tuple<Args...> f) {
+    add_features_impl(v, params, f, std::make_index_sequence<sizeof...(Args)>());
 }

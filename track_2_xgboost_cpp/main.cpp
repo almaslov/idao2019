@@ -38,7 +38,7 @@ void dump_model_info() {
     std::cout << "Computed features: " << std::endl;
     i = 0;
     for (const auto& feature : tuple_to_vector(calculated_features)) {
-        std::cout << i << ": " << feature.func_name << std::endl;
+        std::cout << i++ << ": " << feature.func_name << std::endl;
         for (const auto& s : feature.param_names) {
             std::cout << "\t" << s << std::endl;
         }
@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
         std::vector<float> features;
         index.select(all_features, &features);
 
-        add_features(features, calculated_features);
+        add_features(features, all_features, calculated_features);
 
         DMatrixHandle matrix;
         if (XGDMatrixCreateFromMat(features.data(), 1, features.size(), NAN, &matrix) < 0) {
