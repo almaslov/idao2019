@@ -187,6 +187,16 @@ void Index::select(std::vector<float>& data, std::vector<float>* result) const {
     }
 }
 
+static float NA_VAL = -9999.0;
+
+static void paste_na(std::vector<float>& data) {
+    for (float& val : data) {
+        if (fabsf(val - NA_VAL) < 1e-5) {
+            val = NAN;
+        }
+    }
+}
+
 void Parser::read_one(size_t& id, std::vector<float>& data)
 {
     BufferedStream buffered_stream(stream);
@@ -205,4 +215,6 @@ void Parser::read_one(size_t& id, std::vector<float>& data)
     buffered_stream.skip_record(DELIMITER); // FOI_hits_S
     buffered_stream.fill_iterator_float(
             &data[0] + N_FEATURES - N_RAW_FEATURES_TAIL, N_RAW_FEATURES_TAIL);
+
+    paste_na(data);
 }
