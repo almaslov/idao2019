@@ -1,4 +1,4 @@
-CXXFLAGS = -std=c++17 -Wall -Werror
+CXXFLAGS = -std=c++17 -Wall -Werror -v
 XGB_PATH := $(shell bash get_xgboost_path.sh)
 
 
@@ -20,9 +20,11 @@ baseline: parser.cpp parser.h main.cpp solution.h index.h feature.h
 	-I$(XGB_PATH)/include \
 	-I$(XGB_PATH)/rabit/include \
 	parser.cpp main.cpp \
-	-L$(XGB_PATH)/lib -lxgboost \
-	-Wl,-rpath,$(XGB_PATH)/lib \
-	-o baseline
+	-L./ -lxgboost \
+	-Wl,-rpath,./ \
+	-o baseline && ./baseline --model-info && \
+	ldd ./baseline  && \
+	ls -Llh `ldd baseline  | grep '=>' ` || true
 
 clean:
 	rm -f baseline
