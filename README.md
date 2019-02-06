@@ -103,3 +103,4 @@ df_scores = cross_validate(train, n_estimators=60, n_splits=3, n_rows=100000, tr
 | 09_cos_EAngle_100                               | 19178103 | 7145.69 |
 | 09_cos_fix_NaN_100                              | 19178500 | 7137.69 |
 | 09_cos_fix_NaN_100_60                           | 19178558 | 7062.98 |
+| 09_plus_dll_wo_wbin_100                         | 19180172 | 7137.33 |
