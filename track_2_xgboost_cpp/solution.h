@@ -48,18 +48,18 @@ float mse(float x0, float y0, float ex0, float ey0, float dx0, float dy0,
           float x1, float y1, float ex1, float ey1, float dx1, float dy1,
           float x2, float y2, float ex2, float ey2, float dx2, float dy2,
           float x3, float y3, float ex3, float ey3, float dx3, float dy3) {
-    float lx0 = (x0 - ex0) / dx0 / 2;
-    float ly0 = (y0 - ey0) / dy0 / 2;
-    float lx1 = (x1 - ex1) / dx1 / 2;
-    float ly1 = (y1 - ey1) / dy1 / 2;
-    float lx2 = (x2 - ex2) / dx2 / 2;
-    float ly2 = (y2 - ey2) / dy2 / 2;
-    float lx3 = (x3 - ex3) / dx3 / 2;
-    float ly3 = (y3 - ey3) / dy3 / 2;
-    return (lx0 * lx0 + ly0 * ly0 +
-            lx1 * lx1 + ly1 * ly1 +
-            lx2 * lx2 + ly2 * ly2 +
-            lx3 * lx3 + ly3 * ly3) / 8;
+    float acc = 0;
+    int n = 0;
+#define accumulate(val) if (!std::isnan(val)) {acc += (val) * (val); n += 1;}
+    accumulate((x0 - ex0) / dx0 / 2)
+    accumulate((y0 - ey0) / dy0 / 2)
+    accumulate((x1 - ex1) / dx1 / 2)
+    accumulate((y1 - ey1) / dy1 / 2)
+    accumulate((x2 - ex2) / dx2 / 2)
+    accumulate((y2 - ey2) / dy2 / 2)
+    accumulate((x3 - ex3) / dx3 / 2)
+    accumulate((y3 - ey3) / dy3 / 2)
+    return acc / n;
 }
 
 float normed_err(float x, float ex, float edx) {
