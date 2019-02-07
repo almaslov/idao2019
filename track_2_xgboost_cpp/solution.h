@@ -82,31 +82,31 @@ float probability_hit_detector(float p)
 
 
 auto calculated_features = std::make_tuple(
-    make_feature(probability_hit_detector<0>, "P"),
-    make_feature(probability_hit_detector<1>, "P"),
-    make_feature(probability_hit_detector<2>, "P"),
-    make_feature(probability_hit_detector<3>, "P"),
+    make_complex_feature(probability_hit_detector<0>, "P"),
+    make_complex_feature(probability_hit_detector<1>, "P"),
+    make_complex_feature(probability_hit_detector<2>, "P"),
+    make_complex_feature(probability_hit_detector<3>, "P"),
 
-    make_feature(refraction_angle_2,
+    make_complex_feature(refraction_angle_2,
                  "MatchedHit_X[0]", "MatchedHit_Y[0]", "MatchedHit_Z[0]",
                  "MatchedHit_X[1]", "MatchedHit_Y[1]", "MatchedHit_Z[1]"),
-    make_feature(refraction_angle_3,
+    make_complex_feature(refraction_angle_3,
                  "MatchedHit_X[0]", "MatchedHit_Y[0]", "MatchedHit_Z[0]",
                  "MatchedHit_X[1]", "MatchedHit_Y[1]", "MatchedHit_Z[1]",
                  "MatchedHit_X[2]", "MatchedHit_Y[2]", "MatchedHit_Z[2]"),
-    make_feature(refraction_angle_3,
+    make_complex_feature(refraction_angle_3,
                  "MatchedHit_X[1]", "MatchedHit_Y[1]", "MatchedHit_Z[1]",
                  "MatchedHit_X[2]", "MatchedHit_Y[2]", "MatchedHit_Z[2]",
                  "MatchedHit_X[3]", "MatchedHit_Y[3]", "MatchedHit_Z[3]"),
 
-    make_feature(mse,
+    make_complex_feature(mse,
                  "MatchedHit_X[0]", "MatchedHit_Y[0]", "Lextra_X[0]", "Lextra_Y[0]", "MatchedHit_DX[0]", "MatchedHit_DY[0]",
                  "MatchedHit_X[1]", "MatchedHit_Y[1]", "Lextra_X[1]", "Lextra_Y[1]", "MatchedHit_DX[1]", "MatchedHit_DY[1]",
                  "MatchedHit_X[2]", "MatchedHit_Y[2]", "Lextra_X[2]", "Lextra_Y[2]", "MatchedHit_DX[2]", "MatchedHit_DY[2]",
                  "MatchedHit_X[3]", "MatchedHit_Y[3]", "Lextra_X[3]", "Lextra_Y[3]", "MatchedHit_DX[3]", "MatchedHit_DY[3]"),
 
 #define normed_err_feature(DIM, LAYER) \
-        make_feature(normed_err, MH(DIM, LAYER), E(DIM, LAYER), ED(DIM, LAYER))
+        make_complex_feature(normed_err, MH(DIM, LAYER), E(DIM, LAYER), ED(DIM, LAYER))
 
     normed_err_feature(X, 0),
     normed_err_feature(X, 1),
