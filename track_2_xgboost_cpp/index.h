@@ -3,7 +3,7 @@
 
 class Index {
     typedef std::vector<size_t> PermType;
-private:
+public:
     const std::vector<std::string>& names;
     const PermType perm;
 
