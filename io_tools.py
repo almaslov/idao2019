@@ -124,12 +124,13 @@ class DataTank:
             return 0
         
         self._buffer.append(frame)
-        flushed = 0
+        flushed, flushed_vol = False, 0
         while self._is_full():
-            flushed += self.flush()
+            flushed_vol += self.flush()
+            flushed = True
             if self._early_stop:
                 break
-        return flushed
+        return flushed, flushed_vol
         
     def flush(self):
         if self._buffer.is_empty:
@@ -220,7 +221,8 @@ class PickleDataReader:
         
         for frame, foi_frame in self._read_chunks(cols):
             foi_data_tank.add(foi_frame)
-            if data_tank.add(frame) > 0:
+            flushed, _ = data_tank.add(frame)
+            if flushed:
                 foi_data_tank.flush()
                 return self._result, self._foi_result
 
@@ -330,15 +332,26 @@ class DatasetReader:
                 data_part = data_part.drop(col_delta, axis=1)
             data_parts.append(data_part)
             if foi_data_part is not None:
-                foi_data_part = foi_data_part.loc[foi_data_part.id < (nrows + delta), :]
+                ind = self._find_slice(foi_data_part.loc[:, 'id'].values, nrows + delta)
+                foi_data_part = foi_data_part.iloc[:ind, :]
                 foi_data_parts.append(foi_data_part)
             delta = nrows - len(data_part.index)
             
         data = pd.concat(data_parts, axis=0, ignore_index=False)
-        foi_data = pd.concat(foi_data_parts, axis=0, ignore_index=False) if foi_data_parts else None
+        foi_data = pd.concat(foi_data_parts, axis=0, ignore_index=True) if foi_data_parts else None
         return data, foi_data
-
-
+    
+    @staticmethod
+    def _find_slice(data, n):
+        i, prev = 0, -1
+        while i < len(data):
+            if data[i] != prev:
+                prev, n = data[i], n-1
+            if n < 0:
+                break
+            i += 1
+        return i
+                
 def convert_train():
     DatasetConverter.convert(meta_train)
 
