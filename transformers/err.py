@@ -27,32 +27,34 @@ def add_normed_err(data, features):
     
     features += nerr_xy_cols
     return data
-
-# NOT WORKING BECAUSE OF DTS SHOULD BE ALREADY CALCULATED FOR TEST
-def add_dll(data, features):
-    # fix here
+    
+def create_pdfs(data):
     dts = [dt.loc[:, err_cols[0]] for dt in split_classes(data)]
     min_len = min(map(len, dts))
     nbins = int(round(np.sqrt(min_len) / np.pi))
+    nbins = 230
     
+    l, r = np.min(data[err_cols[0]]) - 1e-5, np.max(data[err_cols[0]]) + 1e-5
+    k = 9
+    m = (r - l) / k
+    m = 20
+    bins = np.concatenate((
+        np.arange(l, 1, .02),
+        np.arange(1, 3, .04),
+        np.arange(3, 10, .1),
+        np.arange(10, 16, .4),
+        np.arange(16, 34, 1.),
+        np.arange(34, 66, 2),
+        np.arange(66, 120, 5.),
+        np.linspace(120, r, 3),
+    ))
+    nbins = len(bins)
     pdfs = []
-    binses = []
+    
     for i in range(2):
-        pdf, bins = np.histogram(dts[i], bins=nbins)
+        pdf, _ = np.histogram(dts[i], bins=bins)
         pdfs.append(pdf)
-        binses.append(bins)
-
-    def get_probs(bins, pdf, x):
-        indices = np.digitize(x, bins) - 1
-        indices = np.clip(indices, 0, len(pdf) - 1)
-        return pdf[indices] / pdf.sum()
-
-    def get_dll(x):
-        probs = [get_probs(bins, pdf, x) for bins, pdf in zip(binses, pdfs)]
-        probs = [np.clip(prob, 0.00000001, 1.) for prob in probs]
-        DLL = np.log(probs[1]) - np.log(probs[0])
-        return DLL
-
-    data[err_cols[1]] = get_dll(data.loc[:, err_cols[0]])
-    features += err_cols[1:2]
-    return data
+    
+    cdfs = [np.cumsum(pdf) for pdf in pdfs]
+    
+    return cdfs, pdfs, bins
