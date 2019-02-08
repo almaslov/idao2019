@@ -39,5 +39,5 @@ foi_dxyz_cols = ["FOI_hits_DX", "FOI_hits_DY", "FOI_hits_DZ"]
 foi_ts_cols = ["FOI_hits_T", "FOI_hits_DT", "FOI_hits_S"]
 foi_cols = foi_xyz_cols + foi_dxyz_cols + foi_ts_cols
 
-SIMPLE_FEATURE_COLS = xyz_cols + dxyz_cols + exy_cols + edxy_cols + t_cols + dt_cols + hit_type_cols + mom_cols + hit_stats_cols + ncl_cols + avg_cs_cols
+SIMPLE_FEATURE_COLS = xyz_cols + dxyz_cols + exy_cols + edxy_cols + dt_cols + hit_type_cols + mom_cols + hit_stats_cols + t_cols + ncl_cols + avg_cs_cols
 ARR_FEATURE_COLS = foi_cols

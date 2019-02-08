@@ -15,7 +15,7 @@ def count_classes(data):
     return cnt_0, len(data.index) - cnt_0
 
 def sample(data, nrows):
-    return data.sample(frac=1).iloc[:nrows, :]
+    return data.iloc[np.random.permutation(len(data.index))[:nrows], :]
 
 
 def fit(train, n_estimators, transformer_cls):
@@ -80,10 +80,10 @@ def cross_validate(train, n_estimators, n_splits, n_rows, transformer_cls):
         f1 = f1_score(y_true, y_pred)
         roc_auc = roc_auc_score(y_true, predictions)
         scr = scoring.rejection90(y_true, predictions, sample_weight=weights)
-        scores += [[acc, prec, rec, f1, roc_auc, scr, threshold, r - l]]
-        feature_importance = get_xgb_imp(fit_state[1], fit_state[0].origin_features + fit_state[0].features)
+        scores += [[acc, prec, rec, f1, roc_auc, scr, threshold]]
+        feature_importance = get_xgb_imp(fit_state[1], fit_state[0].features)
         
-    descr = pd.DataFrame(scores, columns=['acc', 'prec', 'rec', 'f1', 'roc_auc', 'scr', 'th', 'dTh'])
+    descr = pd.DataFrame(scores, columns=['acc', 'prec', 'rec', 'f1', 'roc_auc', 'scr', 'th'])
     return descr, feature_importance
 
 def get_labels_weights(data):
@@ -92,7 +92,7 @@ def get_labels_weights(data):
 def save_model(model, transformer, filename):
     model.save_model(to_model_filename(filename))
     with open(to_cols_filename(filename), 'w') as txt_file:
-        str_arr = map(str, [transformer.origin_features, transformer.features])
+        str_arr = map(str, [transformer.origin_features, transformer.new_features])
         to_write = '\n\n'.join(str_arr)
         txt_file.write(to_write)
 
@@ -109,36 +109,3 @@ def get_xgb_imp(model, feat_names):
     
     score = pd.DataFrame(data=scores, index=feat_names, columns=['score'])
     return score.sort_values(by='score', ascending=False)
-
-# =================== NOT WORKING =======================
-
-def get_class(data, i):
-    return data.index[data.label == i]
-
-def get_cnts(nrows, prop_0, lens):
-    if prop_0 is None:
-        prop_0 = float(lens[0]) / (lens[0] + lens[1])
-    cnt_0 = round(nrows * prop_0)
-    cnt_1 = nrows - cnt_0
-    return cnt_0, cnt_1
-
-
-# Gets `n_rows` head samples from `data` with specified class proportions.
-# If `prop_0` is None, it keeps `data`s natural proportions.
-# If `data` samples is not enough to fulfil proportions for any `class_i` then random sampling from the `class_i` is applied.
-def get_head_w_sampling(data, nrows, prop_0=None):
-    def get_class_head_w_sampling(cnt, class_i, len_i):
-        if cnt < len_i:
-            return class_i[:cnt]
-        class_indices = np.concatenate((np.arange(len_i),  np.random.randint(len_i, size=cnt-len_i)))
-        return class_i[class_indices]
-    
-    classes = [get_class(i) for i in range(2)]
-    cls_lens = list(map(len, classes))
-    cnts = get_cnts(nrows, prop_0, cls_lens)
-    indices = np.concatenate([get_class_head_w_sampling(*kargs) for kargs in zip(cnts, classes, cls_lens)])
-    return data.loc[indices, :].sample(frac=1)
-
-# ^^^^^^^^^^^^^^^^^^^^^^ NOT WORKING ^^^^^^^^^^^^^^^^^^^^^^^^
-
-

@@ -47,9 +47,12 @@ class CsvDataReader:
         return CsvDataReader()._get_read_stream(filenames, usecols, chunk_size)
     
     def _get_read_stream(self, filenames, usecols, chunk_size):
+        if 'id' not in usecols:
+            usecols += ['id']
+            
         for filename in filenames:
             data_generator = pd.read_csv(
-                filename, usecols=usecols, chunksize=chunk_size, #nrows=400000,
+                filename, usecols=usecols, chunksize=chunk_size, index_col='id', #nrows=400000,
                 na_values=self._get_na_values_dict(), keep_default_na=False,
                 converters=self._get_converters(), dtype=self._get_types()
             )
@@ -64,19 +67,17 @@ class CsvDataReader:
 
     def _get_converters(self):
         def parse_float_array(line):
-            return np.fromstring(line[1:-1], sep=" ", dtype=self.float_dtype)
+            arr = np.fromstring(line[1:-1], sep=" ", dtype=self.float_dtype)
+            return arr
 
-        def parse_int_array(line):
-            return np.fromstring(line[1:-1], sep=" ", dtype=self.int_dtype)
-    
         converters = dict(zip(ARR_FEATURE_COLS, repeat(parse_float_array)))
-        converters[foi_ts_cols[-1]] = parse_int_array
-        return
+        return converters
     
     def _get_types(self):
         types = dict(zip(SIMPLE_FEATURE_COLS + ALL_TRAIN_COLS, repeat(self.float_dtype)))
         for col in unused_train_cols[:1] + train_cols[:1] + hit_stats_cols + ncl_cols + hit_type_cols:
             types[col] = self.int_dtype
+        types['id'] = self.int_dtype
         return types
 
 
@@ -98,7 +99,7 @@ class DataBuffer:
     
     def _merge_frames(self):
         if len(self._frames) > 1:
-            merged = pd.concat(self._frames, axis=0, ignore_index=True)
+            merged = pd.concat(self._frames, axis=0, ignore_index=False)
             self._frames = [merged]
         return self._frames[0]
     
@@ -112,16 +113,22 @@ class DataBuffer:
 
 
 class DataTank:
-    def __init__(self, max_volume, callback_on_full):
+    def __init__(self, max_volume, callback_on_full, early_stop=False):
         self._max_volume = max_volume
         self._buffer = DataBuffer()
         self._on_full = callback_on_full
+        self._early_stop = early_stop
     
     def add(self, frame):
+        if frame is None:
+            return 0
+        
         self._buffer.append(frame)
         flushed = 0
         while self._is_full():
             flushed += self.flush()
+            if self._early_stop:
+                break
         return flushed
         
     def flush(self):
@@ -186,37 +193,60 @@ class PickleDataWriter:
         for group_key, col_group in self._helper.get_col_groups():
             filename = self._helper.generate_chunk_filename(group_key, chunk_index)
             chunk.loc[:, col_group].to_pickle(filename)
-
+            
+            if group_key == 'af':
+                filename = self._helper.generate_chunk_filename('afexp', chunk_index)
+                self._expand(chunk, col_group).to_pickle(filename)
+                
+    @staticmethod
+    def _expand(data, cols):
+        ids = np.repeat(data.index.values, data['FOI_hits_N'].values)
+        result = pd.DataFrame(data=ids, columns=['id'])
+        for col in cols:
+             result.loc[:, col] = np.hstack(data.loc[:, col])
+        return result
+    
 
 class PickleDataReader:
-    def __init__(self, helper):
+    def __init__(self, helper, foi_expanded):
         self._helper = helper
         self._result = None
+        self._foi_result = None
+        self._foi_expanded = foi_expanded
         
     def read(self, nrows, cols):
-        data_tank = DataTank(nrows, self._set_read_result)
-        for frame in self._read_chunks(cols):
+        data_tank = DataTank(nrows, self._set_read_result, early_stop=True)
+        foi_data_tank = DataTank(100000000, self._set_foi_read_result)
+        
+        for frame, foi_frame in self._read_chunks(cols):
+            foi_data_tank.add(foi_frame)
             if data_tank.add(frame) > 0:
-                return self._result
+                foi_data_tank.flush()
+                return self._result, self._foi_result
 
         data_tank.flush()
-        return self._result
+        foi_data_tank.flush()
+        return self._result, self._foi_result
         
     def _read_chunks(self, cols):
         chunk_index = 0
         while True:
-            frame = self._read_chunk(chunk_index, cols)
+            frame, foi_frame = self._read_chunk(chunk_index, cols)
             if frame is None:
                 break
             
-            yield frame
+            yield frame, foi_frame
             chunk_index += 1
             
     def _set_read_result(self, data):
         self._result = data
+        
+    def _set_foi_read_result(self, data):
+        self._foi_result = data
     
     def _read_chunk(self, chunk_index, cols):
         chunk_parts = []
+        foi_dataframe = None        
         for group_key, col_group in self._helper.get_col_groups():
             cols_ = self._intersect_cols(cols, set(col_group))
             if not cols_:
@@ -224,12 +254,18 @@ class PickleDataReader:
             
             filename = self._helper.generate_chunk_filename(group_key, chunk_index)
             if not os.path.exists(filename):
-                return None
+                return None, None
+            
+            if group_key == 'af' and self._foi_expanded:
+                filename = self._helper.generate_chunk_filename('afexp', chunk_index)
+                foi_dataframe = pd.read_pickle(filename).loc[:, ['id'] + cols_]
+                continue
             
             chunk_part = pd.read_pickle(filename).loc[:, cols_]
             chunk_parts.append(chunk_part)
             
-        return pd.concat(chunk_parts, axis=1, sort=False)
+        dataframe = pd.concat(chunk_parts, axis=1, sort=False)
+        return dataframe, foi_dataframe
     
     @staticmethod
     def _intersect_cols(cols, col_subset):
@@ -268,16 +304,16 @@ class DatasetConverter:
             print('Stored: {0}M'.format(self._stored / 1000000.))
 
 
-class DatasetReader:   
+class DatasetReader:
     @staticmethod
-    def read_dataset(data_set_meta: DatasetMetaData, cols, nrows=None, prop_0=.5):
+    def read_dataset(data_set_meta: DatasetMetaData, cols, nrows=None, prop_0=.5, foi_expanded=True):
         nrows = nrows if nrows is not None else 100000000
         filename_pattern = data_set_meta.chunk_filenames_pattern
         if data_set_meta.is_test:
-            readers = [PickleDataReader(TestDatasetHelper(filename_pattern))]
+            readers = [PickleDataReader(TestDatasetHelper(filename_pattern), foi_expanded=foi_expanded)]
             proportions = [nrows]
         else: 
-            readers = [PickleDataReader(TrainDatasetHelper(filename_pattern, i, label_prefixes[i])) for i in range(2)]
+            readers = [PickleDataReader(TrainDatasetHelper(filename_pattern, i, label_prefixes[i]), foi_expanded=foi_expanded) for i in range(2)]
             nrows0 = int(nrows * prop_0)
             proportions = [nrows0, nrows - nrows0]
             
@@ -285,14 +321,22 @@ class DatasetReader:
             
     def _read_dataset(self, readers, cols, proportions):
         data_parts = []
+        foi_data_parts = []
         delta = 0
+        col_delta = hit_stats_cols[:1] if hit_stats_cols[0] not in cols else []
         for reader, nrows in zip(readers, proportions):
-            data_part = reader.read(nrows + delta, cols)
+            data_part, foi_data_part = reader.read(nrows + delta, cols + col_delta)
+            if col_delta:
+                data_part = data_part.drop(col_delta, axis=1)
             data_parts.append(data_part)
+            if foi_data_part is not None:
+                foi_data_part = foi_data_part.loc[foi_data_part.id < nrows, :]
+                foi_data_parts.append(foi_data_part)
             delta = nrows - len(data_part.index)
             
-        data = pd.concat(data_parts, axis=0, ignore_index=True)
-        return data
+        data = pd.concat(data_parts, axis=0, ignore_index=False)
+        foi_data = pd.concat(foi_data_parts, axis=0, ignore_index=False) if foi_data_parts else None
+        return data, foi_data
 
 
 def convert_train():
@@ -304,11 +348,11 @@ def convert_pub_test():
 def convert_pvt_test():
     DatasetConverter.convert(meta_pvt_test)
     
-def read_train(cols, rows):
-    return DatasetReader.read_dataset(meta_train, cols + train_cols, rows)
+def read_train(cols, rows, foi_expanded=True):
+    return DatasetReader.read_dataset(meta_train, cols + train_cols, rows, foi_expanded=foi_expanded)
 
-def read_pub_test(cols):
-    return DatasetReader.read_dataset(meta_pub_test, cols)
+def read_pub_test(cols, foi_expanded=True):
+    return DatasetReader.read_dataset(meta_pub_test, cols, foi_expanded=foi_expanded)
 
-def read_pvt_test(cols):
-    return DatasetReader.read_dataset(meta_pvt_test, cols)
+def read_pvt_test(cols, foi_expanded=True):
+    return DatasetReader.read_dataset(meta_pvt_test, cols, foi_expanded=foi_expanded)
