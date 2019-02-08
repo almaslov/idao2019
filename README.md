@@ -109,3 +109,5 @@ df_scores = cross_validate(train, n_estimators=60, n_splits=3, n_rows=100000, tr
 | 09_plus_all_orig_features_1000_200              | 19180244 | 7337.39 |
 | 09_err_xyz_100                                  | 19213590 | 7315.29 |
 | 09_importance_001_100                           | 19213636 | 7155.73 |
+| 09_foi_closest_100                              | 19215506 | 7195.69 |
+| 09_foi_closest_replaced_100                     | 19216704 | 7275.62 |
