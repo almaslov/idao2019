@@ -330,7 +330,7 @@ class DatasetReader:
                 data_part = data_part.drop(col_delta, axis=1)
             data_parts.append(data_part)
             if foi_data_part is not None:
-                foi_data_part = foi_data_part.loc[foi_data_part.id < nrows, :]
+                foi_data_part = foi_data_part.loc[foi_data_part.id < (nrows + delta), :]
                 foi_data_parts.append(foi_data_part)
             delta = nrows - len(data_part.index)
             
