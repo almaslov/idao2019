@@ -114,3 +114,9 @@ df_scores = cross_validate(train, n_estimators=60, n_splits=3, n_rows=100000, tr
 | 09_importance_001_100                           | 19213636 | 7155.73 |
 | 09_foi_closest_100                              | 19215506 | 7195.69 |
 | 09_foi_closest_replaced_100                     | 19216704 | 7275.62 |
+| 09_some_baseline_100                            | 19224628 | 7160.55 |
+| 09_baseline_wo_wbins_importance_100             | 19224649 | 7235.39 |
+| 09_baseline_cdf_100                             | 19224694 | 7263.3  |
+| 09_baseline_cdf_wo_wbins_100                    | 19224712 | 7172.26 |
+| 09_best_wo_score                                | 19224767 | 7219.85 |
+| 09_best_wo_score_wo_weights                     | 19224828 | 7274.37 |

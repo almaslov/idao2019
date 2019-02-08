@@ -1,5 +1,5 @@
 import numpy as np
-from common import xy_cols, exy_cols, dx_cols, dy_cols, edxy_cols, N_STATIONS
+from common import xy_cols, exy_cols, dx_cols, dy_cols, edxy_cols, z_cols, N_STATIONS
 from pipeline import split_classes
 
 err_cols = ['ErrMSE', 'DLL'] #, 'Chi2Quantile']
@@ -7,6 +7,13 @@ err_cols = ['ErrMSE', 'DLL'] #, 'Chi2Quantile']
 nerr_x_cols = ['NErr_X[%i]' % i for i in range(N_STATIONS)]
 nerr_y_cols = ['NErr_Y[%i]' % i for i in range(N_STATIONS)]
 nerr_xy_cols = nerr_x_cols + nerr_y_cols
+
+err_x_cols = ['Err_X[%i]' % i for i in range(N_STATIONS)]
+err_y_cols = ['Err_Y[%i]' % i for i in range(N_STATIONS)]
+err_z_cols = ['Err_Z[%i]' % i for i in range(N_STATIONS)]
+err_xy_cols = err_x_cols + err_y_cols
+err_xyz_cols = err_xy_cols + err_z_cols
+ez = np.array([15270., 16470., 17670., 18870.])
 
 
 def add_mse(data, features):
@@ -27,8 +34,17 @@ def add_normed_err(data, features):
     
     features += nerr_xy_cols
     return data
+
+def add_errs(data, features):
+    for err_col, e_col, col in zip (err_xy_cols, exy_cols, xy_cols):
+        data.loc[:, err_col] = data[e_col].values - data[col].values
+        
+    for i in range(4):
+        data.loc[:, err_z_cols[i]] = ez[i] - data[z_cols[i]].values
     
-def create_pdfs(data):
+    features += err_xyz_cols
+
+def create_distr(data):
     dts = [dt.loc[:, err_cols[0]] for dt in split_classes(data)]
     min_len = min(map(len, dts))
     nbins = int(round(np.sqrt(min_len) / np.pi))
@@ -58,3 +74,25 @@ def create_pdfs(data):
     cdfs = [np.cumsum(pdf) for pdf in pdfs]
     
     return cdfs, pdfs, bins
+
+# выбираем опцию, как считать DLL - либо на основе pdf, либо на основе cdf
+def get_dll_pdf(x, pdfs, cdfs, bins):
+    def get_probs_pdf(pdf, x):
+        indices = np.digitize(x, bins) - 1
+        wbin = (bins[indices + 1] - bins[indices]) / (np.max(bins) - np.min(bins))
+        prob = pdf[indices] / pdf.sum()
+        return prob * wbin
+
+    probs = [get_probs_pdf(pdf, x) for pdf in pdfs]
+    DLL = np.log(probs[1]) - np.log(probs[0])
+    return DLL
+
+def get_dll_cdf(x, pdfs, cdfs, bins):
+    def get_probs_cdf(cdf, x):
+        indices = np.digitize(x, bins) - 1
+        wbin = (bins[indices + 1] - bins[0]) / (np.max(bins) - np.min(bins))
+        prob = cdf[indices] / cdf[-1]
+        return prob * wbin
+    probs = [get_probs_cdf(cdf, x) for cdf in cdfs]
+    DLL = np.log(probs[1]) - np.log(probs[0])
+    return DLL
