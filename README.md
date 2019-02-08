@@ -3,11 +3,14 @@
 ## Links
 
 - [Contest link](https://official.contest.yandex.ru/contest/10569/enter/)
+- [Feature clarification](https://docs.google.com/document/d/1ur3EdTo49PCYtbwN35IXVGV-0dR9X0U8TH3dZ4pT8JM/edit)
 - [The Muon Identification Procedure](https://core.ac.uk/download/pdf/44230824.pdf)
 - [Muon system explained](https://cds.cern.ch/record/2063310/files/CERN-THESIS-2015-181.pdf)
 - [isMuonTight+BDT](https://indico.cern.ch/event/491582/contributions/1168914/attachments/1236304/1815447/LHCC_Cogoni_v4.pdf)
 - [fitting with energy loss and multiple scattering](https://www.nikhef.nl/~wouterh/topicallectures/TrackingAndVertexing/part4.pdf)
 - [MULTIPLE SCATTERING ERROR PROPAGATION IN PARTICLE TRACK RECONSTRUCTION](https://arxiv.org/pdf/hep-ex/9406006.pdf)
+- [The Performance of the LHCb Muon Identification Procedure](http://cds.cern.ch/record/1093941/files/lhcb-2007-145.pdf)
+- [Selection and processing of calibration samples to measure the particle identification performance of the LHCb experiment in Run 2](https://arxiv.org/pdf/1803.00824.pdf)
 
 ## FAQ
 
