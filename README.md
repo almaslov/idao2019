@@ -124,3 +124,4 @@ df_scores = cross_validate(train, n_estimators=60, n_splits=3, n_rows=100000, tr
 | 09_w_score_wo_custom_track_match                | 19224959 | 7273.95 |
 | 09_naive_v_m_100                                | 19226060 | 7331.76 |
 | 09_naive_v_m_w_cl                               | 19226134 | 7270.43 |
+| 09_vm_100                                       | 19236776 | 7324.46 |

@@ -1,5 +1,5 @@
 import numpy as np
-from common import xy_cols, exy_cols, dx_cols, dy_cols, edxy_cols, z_cols, N_STATIONS
+from common import xy_cols, xyz_cols, ex_cols, ey_cols, exy_cols, dx_cols, dy_cols, edxy_cols, z_cols, t_cols, mom_cols, N_STATIONS
 from pipeline import split_classes
 
 err_cols = ['ErrMSE', 'DLL'] #, 'Chi2Quantile']
@@ -46,14 +46,7 @@ def add_errs(data, features):
 
 def create_distr(data):
     dts = [dt.loc[:, err_cols[0]] for dt in split_classes(data)]
-    min_len = min(map(len, dts))
-    nbins = int(round(np.sqrt(min_len) / np.pi))
-    nbins = 230
-    
     l, r = np.min(data[err_cols[0]]) - 1e-5, np.max(data[err_cols[0]]) + 1e-5
-    k = 9
-    m = (r - l) / k
-    m = 20
     bins = np.concatenate((
         np.arange(l, 1, .02),
         np.arange(1, 3, .04),
@@ -64,7 +57,6 @@ def create_distr(data):
         np.arange(66, 120, 5.),
         np.linspace(120, r, 3),
     ))
-    nbins = len(bins)
     pdfs = []
     
     for i in range(2):
@@ -96,3 +88,57 @@ def get_dll_cdf(x, pdfs, cdfs, bins):
     probs = [get_probs_cdf(cdf, x) for cdf in cdfs]
     DLL = np.log(probs[1]) - np.log(probs[0])
     return DLL
+
+vm_cols = ['V', 'VT', 'M', 'MT']
+
+def add_velocity(data, features):
+    def get_layer_coords(data, cols, i):
+        return data[[cols[i], cols[i+4], cols[i+8]]].values
+    def get_elayer_coords(data, i):
+        exy = data.loc[:, [ex_cols[i], ey_cols[i]]].values
+        ez_ = np.tile(ez[i], exy.shape[0]).reshape((-1, 1))
+        return np.hstack((exy, ez_))
+    def dot(x, y):
+        return np.sum(x * y, axis=1, dtype=np.float32)
+    def norm(x):
+        return np.sqrt(dot(x, x))
+    def get_zero_point(data):
+        layers = [get_elayer_coords(data, i) for i in range(2)]
+        r = layers[1] - layers[0]
+        r = r / norm(r)[:, np.newaxis]
+        p = get_elayer_coords(data, 0)
+        alpha = - p[:, 2] / r[:, 2]
+        
+        xs = p[:, 0] + alpha * r[:, 0]
+        ys = p[:, 1] + alpha * r[:, 1]
+        zs = np.tile(0, len(xs))
+        return np.vstack((xs, ys, zs)).T
+    
+    # radius-vector r_i = p_i - p_0: S x N x 3; 
+    r = np.array([get_layer_coords(data, xyz_cols, i) for i in range(4)]) - get_zero_point(data)
+    
+    # time: S x N
+    t = data.loc[:, t_cols].values.T
+    
+    # average velocity avg(r / t): N x 3    
+    v_avg = np.nanmean(r / t[:, :, np.newaxis], axis=0)
+    # average speed |v|: N
+    speed = norm(v_avg)
+    # transverse speed |v_xy|: N
+    speed_tr = norm(v_avg * np.array([1., 1., 0.]))
+    
+    # momentum: N
+    p = data.loc[:, mom_cols[0]].values
+    # transverse momentum: N
+    p_tr = data.loc[:, mom_cols[1]].values
+    
+    # mass: N
+    m = p / speed
+    # transverse mass: N
+    m_tr = p_tr / speed_tr
+
+    results = [speed, speed_tr, m, m_tr]
+    for col, res in zip(vm_cols, results):
+        data.loc[:, col] = res
+    features += vm_cols
+    return data
