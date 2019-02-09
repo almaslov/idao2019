@@ -1,9 +1,9 @@
-CXXFLAGS = -std=c++17 -Wall -Werror
-XGB_PATH := $(shell python3 -c 'import xgboost; print(xgboost.__path__[0])')
+CXXFLAGS = -std=c++17 -Wall -Werror -v
+XGB_PATH := $(shell bash get_xgboost_path.sh)
 
 
 ifeq ($(DEBUG), 1)
-	CXXFLAGS += -g -O0 -p
+	CXXFLAGS += -g -O0 -p -fsanitize=address
 else
 	CXXFLAGS += -O3
 endif
@@ -15,14 +15,16 @@ build: baseline
 run: baseline
 	./baseline
 
-baseline: parser.cpp parser.h main.cpp lib
+baseline: parser.cpp parser.h main.cpp solution.h index.h feature.h
 	$(CXX) $(CXXFLAGS) \
 	-I$(XGB_PATH)/include \
 	-I$(XGB_PATH)/rabit/include \
 	parser.cpp main.cpp \
-	-L$(XGB_PATH)/lib -lxgboost \
-	-Wl,-rpath,$(XGB_PATH)/lib \
-	-o baseline
+	-L./ -lxgboost \
+	-Wl,-rpath,./ \
+	-o baseline && ./baseline --model-info && \
+	ldd ./baseline  && \
+	ls -Llh `ldd baseline  | grep '=>' ` || true
 
 clean:
-	rm -f baseline compute_features
+	rm -f baseline

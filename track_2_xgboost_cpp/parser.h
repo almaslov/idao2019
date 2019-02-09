@@ -9,6 +9,9 @@
 #include <array>
 #include <limits>
 
+#include "index.h"
+
+
 const size_t N_STATIONS = 4;
 //const size_t FOI_FEATURES_PER_STATION = 6;
 // The structure of .csv is the following:
@@ -25,29 +28,6 @@ const size_t FOI_HITS_N_INDEX = 62;
 //const float EMPTY_FILLER = 1000;
 
 const char DELIMITER = ',';
-
-
-class Index {
-    typedef std::vector<size_t> PermType;
-private:
-    const std::vector<std::string>& names;
-    const PermType perm;
-
-public:
-    Index(const std::vector<std::string>& columns);
-
-    size_t size() const {
-        return perm.size();
-    }
-
-    PermType::const_iterator perm_begin() const {
-        return perm.begin();
-    }
-
-    PermType::const_iterator perm_end() const {
-        return perm.end();
-    }
-};
 
 
 class Parser {

@@ -172,7 +172,6 @@ static std::vector<size_t> calc_perm(const std::vector<std::string>& names) {
     return result;
 }
 
-
 Index::Index(const std::vector<std::string>& columns)
     : names(columns)
     , perm(calc_perm(columns))
@@ -180,9 +179,26 @@ Index::Index(const std::vector<std::string>& columns)
     (void)names;
 }
 
-void Parser::read_one(size_t& id, std::vector<float>& result)
+void Index::select(std::vector<float>& data, std::vector<float>* result) const {
+    result->clear();
+    result->reserve(size());
+    for (auto it = perm_begin(); it != perm_end(); ++it) {
+        result->push_back(data[*it]);
+    }
+}
+
+static float NA_VAL = -9999.0;
+
+static void paste_na(std::vector<float>& data) {
+    for (float& val : data) {
+        if (fabsf(val - NA_VAL) < 1e-5) {
+            val = NAN;
+        }
+    }
+}
+
+void Parser::read_one(size_t& id, std::vector<float>& data)
 {
-    static std::vector<float> data(N_FEATURES);
     BufferedStream buffered_stream(stream);
     id = buffered_stream.rip_uint<size_t>();
     buffered_stream.fill_iterator_float(&data[0], N_RAW_FEATURES_HEAD);
@@ -200,8 +216,5 @@ void Parser::read_one(size_t& id, std::vector<float>& result)
     buffered_stream.fill_iterator_float(
             &data[0] + N_FEATURES - N_RAW_FEATURES_TAIL, N_RAW_FEATURES_TAIL);
 
-    result.reserve(index.size());
-    for (auto it = index.perm_begin(); it != index.perm_end(); ++it) {
-        result.push_back(data[*it]);
-    }
+    paste_na(data);
 }
