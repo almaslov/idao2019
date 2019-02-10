@@ -129,3 +129,5 @@ df_scores = cross_validate(train, n_estimators=60, n_splits=3, n_rows=100000, tr
 | 10_matched_hits_1seg_100                        | 19238723 | 7173.52 |
 | 10_matched_hits_1seg_cos_100                    | 19238753 | 7232.04 |
 | 10_matched_hits_1seg_cos_d2_100                 | 19238758 | 7194.55 |
+| 10_wo_time_constraints_100                      | 19246684 | 7215.02 |
+| 10_wo_time_constraints_mean_100                 | 19247316 | 7287.91 |
