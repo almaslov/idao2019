@@ -131,3 +131,13 @@ df_scores = cross_validate(train, n_estimators=60, n_splits=3, n_rows=100000, tr
 | 10_matched_hits_1seg_cos_d2_100                 | 19238758 | 7194.55 |
 | 10_wo_time_constraints_100                      | 19246684 | 7215.02 |
 | 10_wo_time_constraints_mean_100                 | 19247316 | 7287.91 |
+| 11_baseline_100                                 | 19249026 | 7177.62 |
+| 11_baseline_wo_imp_100                          | 19249047 | 7174.55 |
+| 11_no_wbin_100                                  | 19249087 | 7239.43 |
+| 11_dumb_cos_100                                 | 19249164 | 7169.83 |
+| 11_cat_boost_100_120                            | 19249577 | 7018.77 |
+| 11_cat_boost_100_120 wo weights                 | 19249593 | 6815.17 |
+| 11_cat_boost_100_120 pos weights                | 19249638 | 6944.37 |
+| 11_weigths_pos_100_120                          | 19249661 | 6894.69 |
+| 11_weigths_pos_400k_500                         | 19249699 | 7272.03 |
+| 11_1m_1000                                      | 19249842 | 7385.34 |
