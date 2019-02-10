@@ -49,7 +49,7 @@ class CsvDataReader:
     def _get_read_stream(self, filenames, usecols, chunk_size):
         if 'id' not in usecols:
             usecols += ['id']
-            
+
         for filename in filenames:
             data_generator = pd.read_csv(
                 filename, usecols=usecols, chunksize=chunk_size, index_col='id', #nrows=400000,
@@ -57,7 +57,6 @@ class CsvDataReader:
                 converters=self._get_converters(), dtype=self._get_types()
             )
             for data in data_generator:
-                
                 yield data
 
     def _get_na_values_dict(self):
@@ -202,7 +201,7 @@ class PickleDataWriter:
     @staticmethod
     def _expand(data, cols):
         ids = np.repeat(data.index.values, data['FOI_hits_N'].values)
-        result = pd.DataFrame(data=ids, columns=['id'])
+        result = pd.DataFrame(index=ids)
         for col in cols:
              result.loc[:, col] = np.hstack(data.loc[:, col])
         return result
@@ -261,6 +260,7 @@ class PickleDataReader:
             if group_key == 'af' and self._foi_expanded:
                 filename = self._helper.generate_chunk_filename('afexp', chunk_index)
                 foi_dataframe = pd.read_pickle(filename).loc[:, ['id'] + cols_]
+                foi_dataframe.set_index('id', inplace=True)
                 continue
             
             chunk_part = pd.read_pickle(filename).loc[:, cols_]
@@ -332,13 +332,13 @@ class DatasetReader:
                 data_part = data_part.drop(col_delta, axis=1)
             data_parts.append(data_part)
             if foi_data_part is not None:
-                ind = self._find_slice(foi_data_part.loc[:, 'id'].values, nrows + delta)
+                ind = self._find_slice(foi_data_part.index.values, nrows + delta)
                 foi_data_part = foi_data_part.iloc[:ind, :]
                 foi_data_parts.append(foi_data_part)
             delta = nrows - len(data_part.index)
             
         data = pd.concat(data_parts, axis=0, ignore_index=False)
-        foi_data = pd.concat(foi_data_parts, axis=0, ignore_index=True) if foi_data_parts else None
+        foi_data = pd.concat(foi_data_parts, axis=0, ignore_index=False) if foi_data_parts else None
         return data, foi_data
     
     @staticmethod

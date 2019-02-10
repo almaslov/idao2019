@@ -125,3 +125,7 @@ df_scores = cross_validate(train, n_estimators=60, n_splits=3, n_rows=100000, tr
 | 09_naive_v_m_100                                | 19226060 | 7331.76 |
 | 09_naive_v_m_w_cl                               | 19226134 | 7270.43 |
 | 09_vm_100                                       | 19236776 | 7324.46 |
+| 10_matched_hits_100                             | 19238691 | 7287.65 |
+| 10_matched_hits_1seg_100                        | 19238723 | 7173.52 |
+| 10_matched_hits_1seg_cos_100                    | 19238753 | 7232.04 |
+| 10_matched_hits_1seg_cos_d2_100                 | 19238758 | 7194.55 |
