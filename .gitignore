@@ -6,4 +6,5 @@ catboost_info
 *.csv
 *.gz
 *.pkl
+*.npy
 models/*.txt
