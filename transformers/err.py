@@ -2,7 +2,7 @@ import numpy as np
 from common import xy_cols, xyz_cols, ex_cols, ey_cols, exy_cols, dx_cols, dy_cols, edxy_cols, z_cols, t_cols, mom_cols, N_STATIONS
 from pipeline import split_classes
 
-err_cols = ['ErrMSE', 'DLL'] #, 'Chi2Quantile']
+err_cols = ['ErrMSE', 'DLL', 'ErrMSE_2'] #, 'Chi2Quantile']
 
 nerr_x_cols = ['NErr_X[%i]' % i for i in range(N_STATIONS)]
 nerr_y_cols = ['NErr_Y[%i]' % i for i in range(N_STATIONS)]
