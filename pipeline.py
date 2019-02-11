@@ -10,10 +10,6 @@ from common import train_cols
 def split_classes(data):
     return [data.loc[data.label == i, :] for i in range(2)]
 
-def count_classes(data):
-    cnt_0 = np.count_nonzero(data.label == 0)
-    return cnt_0, len(data.index) - cnt_0
-
 def sample(data, nrows):
     return data.iloc[np.random.permutation(len(data.index))[:nrows], :]
 

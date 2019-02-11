@@ -26,7 +26,7 @@ meta_pub_test = DatasetMetaData(
     origin_col_set=SIMPLE_FEATURE_COLS + ARR_FEATURE_COLS
 )
 meta_pvt_test = DatasetMetaData(
-    origin_csv_filenames=[],
+    origin_csv_filenames=['data/test_private_v3_track_1.csv.gz'],
     chunk_filenames_pattern='data/test_pvt_{group}_{ind:03d}.pkl',
     origin_col_set=SIMPLE_FEATURE_COLS + ARR_FEATURE_COLS
 )
@@ -120,7 +120,7 @@ class DataTank:
     
     def add(self, frame):
         if frame is None:
-            return 0
+            return False, 0
         
         self._buffer.append(frame)
         flushed, flushed_vol = False, 0
@@ -351,6 +351,10 @@ class DatasetReader:
                 break
             i += 1
         return i
+
+def count_classes(data):
+    cnt_0 = np.count_nonzero(data.label == 0)
+    return cnt_0, len(data.index) - cnt_0
                 
 def convert_train():
     DatasetConverter.convert(meta_train)
