@@ -120,23 +120,23 @@ class DataTank:
     
     def add(self, frame):
         if frame is None:
-            return False, 0
+            return True, 0
         
         self._buffer.append(frame)
         flushed, flushed_vol = False, 0
         while self._is_full():
-            flushed_vol += self.flush()
-            flushed = True
+            flushed, flushed_vol_ = self.flush()
+            flushed_vol += flushed_vol_
             if self._early_stop:
                 break
         return flushed, flushed_vol
         
     def flush(self):
         if self._buffer.is_empty:
-            return 0
+            return True, 0
         flushed_data, flushed_vol = self._buffer.cut(self._max_volume)
         self._on_full(flushed_data)
-        return flushed_vol
+        return True, flushed_vol
     
     def _is_full(self):
         return self._buffer.nrows >= self._max_volume
@@ -298,8 +298,9 @@ class DatasetConverter:
         for writer in writers:
             self._print_stored(writer.flush())
             
-    def _print_stored(self, stored):
-        if stored == 0:
+    def _print_stored(self, store_info):
+        is_stored, stored = store_info
+        if not is_stored:
             return
         self._stored += stored
         if self._stored % 200000 == 0:

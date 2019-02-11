@@ -143,3 +143,4 @@ df_scores = cross_validate(train, n_estimators=60, n_splits=3, n_rows=100000, tr
 | 11_1m_1000                                      | 19249842 | 7385.34 |
 | 12_baseline_1m                                  | 19262836 | 7323.49 |
 | 12_baseline_2m_400                              | 19263823 | 7387.86 |
+| 13_blending                                     | 19264752 | 7461.79 |
