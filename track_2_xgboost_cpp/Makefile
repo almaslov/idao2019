@@ -1,5 +1,8 @@
-CXXFLAGS = -std=c++17 -Wall -Werror -v
-XGB_PATH := $(shell bash get_xgboost_path.sh)
+CXXFLAGS = -std=c++17 -Wall -Werror
+# XGB_PATH=/usr/conda/lib/python3.6/site-packages/xgboost
+# XGB_PATH=/venv/lib/python3.5/site-packages/xgboost
+# XGB_PATH := $(shell bash get_xgboost_path.sh)
+
 
 
 ifeq ($(DEBUG), 1)
@@ -15,16 +18,21 @@ build: baseline
 run: baseline
 	./baseline
 
-baseline: parser.cpp parser.h main.cpp solution.h index.h feature.h
+generated.h: generate_solution.py
+	python3 generate_solution.py >generated.h
+
+local: feature_functions.h generated.h main.cpp
+	cat feature_functions.h generated.h main.cpp >generated_main.cpp && \
+	./create_archive.sh Makefile parser.h parser.cpp include lib my.xgb generated_main.cpp
+
+baseline: parser.cpp parser.h generated_main.cpp
 	$(CXX) $(CXXFLAGS) \
-	-I$(XGB_PATH)/include \
-	-I$(XGB_PATH)/rabit/include \
-	parser.cpp main.cpp \
-	-L./ -lxgboost \
-	-Wl,-rpath,./ \
-	-o baseline && ./baseline --model-info && \
-	ldd ./baseline  && \
-	ls -Llh `ldd baseline  | grep '=>' ` || true
+	-I./include \
+	parser.cpp generated_main.cpp \
+	-L./lib -lxgboost \
+	-Wl,-rpath,./lib \
+	-o baseline && \
+	./baseline --model-info
 
 clean:
-	rm -f baseline
+	ls -al `find . -type f` && rm -f baseline

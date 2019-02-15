@@ -3,7 +3,6 @@
 #include <sstream>
 
 #include "parser.h"
-#include "reference_header.h"
 
 inline bool not_number(const char pen) {
     return !isdigit(pen) && !(pen == '.') && !(pen == '-');
@@ -139,59 +138,13 @@ class BufferedStream {
     const char* pen;
 };
 
-static std::vector<std::string> init_all_columns() {
-    std::vector<std::string> result;
-    std::istringstream stream(REFERENCE_HEADER);
-    std::string s;
-    while (getline(stream, s, DELIMITER)) {
-        if (s != "id") {
-            result.push_back(s);
-        }
-    }
-    assert(result.size() == N_FEATURES);
 
-    return result;
-}
-
-static std::vector<std::string> all_columns = init_all_columns();
-
-static std::vector<size_t> calc_perm(const std::vector<std::string>& names) {
-    std::vector<size_t> result;
-    for (const auto& name : names) {
-        if (name.substr(0, 3) == "FOI" && name != "FOI_hits_N") {
-            throw std::invalid_argument("FOI columns not implemented");
-        }
-
-        auto it = std::find(all_columns.begin(), all_columns.end(), name);
-        if (it != all_columns.end()) {
-            result.push_back(it - all_columns.begin());
-        } else {
-            throw std::invalid_argument("Unknown name " + name);
-        }
-    }
-    return result;
-}
-
-Index::Index(const std::vector<std::string>& columns)
-    : names(columns)
-    , perm(calc_perm(columns))
-{
-    (void)names;
-}
-
-void Index::select(std::vector<float>& data, std::vector<float>* result) const {
-    result->clear();
-    result->reserve(size());
-    for (auto it = perm_begin(); it != perm_end(); ++it) {
-        result->push_back(data[*it]);
-    }
-}
-
-static float NA_VAL = -9999.0;
+static float NA_VAL1 = -9999.0;
+static float NA_VAL2 = 255.0;
 
 static void paste_na(std::vector<float>& data) {
     for (float& val : data) {
-        if (fabsf(val - NA_VAL) < 1e-5) {
+        if (fabsf(val - NA_VAL1) < 1e-5 || fabsf(val - NA_VAL2) < 1e-5) {
             val = NAN;
         }
     }

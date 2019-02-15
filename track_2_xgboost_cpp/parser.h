@@ -9,9 +9,6 @@
 #include <array>
 #include <limits>
 
-#include "index.h"
-
-
 const size_t N_STATIONS = 4;
 //const size_t FOI_FEATURES_PER_STATION = 6;
 // The structure of .csv is the following:
@@ -31,13 +28,11 @@ const char DELIMITER = ',';
 
 
 class Parser {
-    const Index& index;
     std::istream& stream;
 
 public:
-    Parser(const Index& index, std::istream& stream)
-        : index(index)
-        , stream(stream)
+    Parser(std::istream& stream)
+        : stream(stream)
     {
     }
 
